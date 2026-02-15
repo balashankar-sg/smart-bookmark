@@ -2,22 +2,31 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import BookmarkForm from "@/components/BookmarkForm";
-import BookmarkList from "@/components/BookmarkList";
 import { User } from "@supabase/supabase-js";
 import Navbar from "@/components/Navbar";
+import BookmarkForm from "@/components/BookmarkForm";
+import BookmarkList from "@/components/BookmarkList";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
-        window.location.href = "/login";
-      } else {
+    const handleAuth = async () => {
+      // 🔥 This exchanges ?code= for session
+      await supabase.auth.exchangeCodeForSession(
+        window.location.href
+      );
+
+      const { data } = await supabase.auth.getUser();
+
+      if (data.user) {
         setUser(data.user);
+      } else {
+        window.location.href = "/login";
       }
-    });
+    };
+
+    handleAuth();
   }, []);
 
   if (!user) return null;
